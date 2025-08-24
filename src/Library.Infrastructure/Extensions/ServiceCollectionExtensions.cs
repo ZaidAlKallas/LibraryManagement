@@ -1,4 +1,5 @@
-﻿using Library.Infrastructure.Data;
+﻿using Library.Application.Common.Interfaces;
+using Library.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,8 @@ public static class ServiceCollectionExtensions
             else if (dbProvider == "Sqlite")
                 options.UseSqlite(configuration.GetConnectionString("Sqlite"));
         });
+
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<LibraryDbContext>());
 
         return services;
     }

@@ -1,10 +1,11 @@
-﻿using Library.Domain.Entities;
+﻿using Library.Application.Common.Interfaces;
+using Library.Domain.Entities;
 using Library.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Library.Infrastructure.Data;
 public class LibraryDbContext(DbContextOptions options)
-    : DbContext(options)
+    : DbContext(options), IApplicationDbContext
 {
     public DbSet<Author> Authors => Set<Author>();
     public DbSet<Book> Books => Set<Book>();
