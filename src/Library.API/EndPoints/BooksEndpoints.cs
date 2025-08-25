@@ -1,4 +1,5 @@
 ﻿using Library.Application.Books.Commands.AddBook;
+using Library.Application.Books.Commands.DeleteBook;
 using Library.Application.Books.Queries.GetBooks;
 using MediatR;
 
@@ -21,6 +22,17 @@ public static class BooksEndpoints
             var bookId = await mediator.Send(command);
             return Results.Created($"/api/books/{bookId}", new { Id = bookId });
         });
+
+        group.MapDelete("/{id:int:min(1)}", async (int id, ISender sender, CancellationToken ct) =>
+        {
+            await sender.Send(new DeleteBookCommand(id), ct);
+            return Results.NoContent();
+        })
+        .WithName("DeleteBook")
+        .WithSummary("Delete a book by id")
+        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status404NotFound);
+
 
         return app;
     }
