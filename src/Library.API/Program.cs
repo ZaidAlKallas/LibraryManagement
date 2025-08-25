@@ -13,6 +13,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Get
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
 // Apply migrations automatically
 app.ApplyMigrations();
 
