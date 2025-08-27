@@ -1,5 +1,6 @@
 ﻿using Library.Application.Books.Commands.AddBook;
 using Library.Application.Books.Commands.DeleteBook;
+using Library.Application.Books.Commands.UpdateBook;
 using Library.Application.Books.Queries.GetBookById;
 using Library.Application.Books.Queries.GetBooks;
 using MediatR;
@@ -33,6 +34,20 @@ public static class BooksEndpoints
             var bookId = await mediator.Send(command);
             return Results.Created($"/api/books/{bookId}", new { Id = bookId });
         });
+
+        app.MapPut("/api/books/{id:int}", async (int id, UpdateBookCommand command, ISender sender) =>
+        {
+            if (id != command.Id)
+                return Results.BadRequest("Route id and body id do not match.");
+
+            await sender.Send(command);
+            return Results.NoContent();
+        })
+        .WithName("UpdateBook")
+        .WithSummary("Update a book by id")
+        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:int:min(1)}", async (int id, ISender sender, CancellationToken ct) =>
         {
