@@ -1,5 +1,6 @@
 ﻿using Library.Application.Books.Commands.AddBook;
 using Library.Application.Books.Commands.DeleteBook;
+using Library.Application.Books.Queries.GetBookById;
 using Library.Application.Books.Queries.GetBooks;
 using MediatR;
 
@@ -16,6 +17,16 @@ public static class BooksEndpoints
             var books = await mediator.Send(new GetBooksQuery());
             return Results.Ok(books);
         });
+
+        group.MapGet("/{id:int}", async (int id, ISender sender) =>
+        {
+            var book = await sender.Send(new GetBookByIdQuery(id));
+            return Results.Ok(book);
+        })
+        .WithName("GetBookById")
+        .WithSummary("Get a book by id")
+        .Produces<BookDto>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/", async (IMediator mediator, AddBookCommand command) =>
         {
