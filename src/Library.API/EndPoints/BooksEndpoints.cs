@@ -35,7 +35,7 @@ public static class BooksEndpoints
             return Results.Created($"/api/books/{bookId}", new { Id = bookId });
         });
 
-        app.MapPut("/api/books/{id:int}", async (int id, UpdateBookCommand command, ISender sender) =>
+        group.MapPut("/api/books/{id:int}", async (int id, UpdateBookCommand command, ISender sender) =>
         {
             if (id != command.Id)
                 return Results.BadRequest("Route id and body id do not match.");
