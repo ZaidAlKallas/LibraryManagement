@@ -1,50 +1,13 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace Library.API.Middleware;
 
-public class GlobalExceptionHandler : IExceptionHandler
+public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
+    : IExceptionHandler
 {
-    private readonly ILogger<GlobalExceptionHandler> _logger;
-
-    private readonly Dictionary<Type, Func<Exception, ProblemDetails>> _exceptionHandlers;
-
-    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
-    {
-        _logger = logger;
-
-        _exceptionHandlers = new Dictionary<Type, Func<Exception, ProblemDetails>>
-        {
-            {
-                typeof(KeyNotFoundException),
-                ex => new ProblemDetails
-                {
-                    Title = "Resource not found",
-                    Status = StatusCodes.Status404NotFound,
-                    Detail = ex.Message
-                }
-            },
-            {
-                typeof(ValidationException),
-                ex => new ProblemDetails
-                {
-                    Title = "Validation error",
-                    Status = StatusCodes.Status400BadRequest,
-                    Detail = ex.Message
-                }
-            },
-            {
-                typeof(UnauthorizedAccessException),
-                ex => new ProblemDetails
-                {
-                    Title = "Access denied",
-                    Status = StatusCodes.Status403Forbidden,
-                    Detail = ex.Message
-                }
-            }
-        };
-    }
+    private readonly ILogger<GlobalExceptionHandler> _logger = logger;
 
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
@@ -53,22 +16,43 @@ public class GlobalExceptionHandler : IExceptionHandler
     {
         _logger.LogError(exception, "Unhandled exception occurred");
 
-        ProblemDetails problemDetails;
-
-        if (_exceptionHandlers.TryGetValue(exception.GetType(), out var handler))
+        ProblemDetails problemDetails = exception switch
         {
-            problemDetails = handler(exception);
-        }
-        else
-        {
-            problemDetails = new ProblemDetails
+            KeyNotFoundException ex => new ProblemDetails
+            {
+                Title = "Resource not found",
+                Status = StatusCodes.Status404NotFound,
+                Detail = ex.Message
+            },
+            ValidationException ex => new ProblemDetails
+            {
+                Title = "Validation error",
+                Status = StatusCodes.Status400BadRequest,
+                Detail = "One or more validation errors occurred.",
+                Extensions =
+                    {
+                        ["errors"] = ex.Errors
+                            .Select(e => new { e.PropertyName, e.ErrorMessage })
+                            .GroupBy(e => e.PropertyName)
+                            .ToDictionary(
+                                g => g.Key,
+                                g => g.Select(e => e.ErrorMessage).ToArray()
+                            )
+                    }
+            },
+            UnauthorizedAccessException ex => new ProblemDetails
+            {
+                Title = "Access denied",
+                Status = StatusCodes.Status403Forbidden,
+                Detail = ex.Message
+            },
+            _ => new ProblemDetails
             {
                 Title = "An error occurred while processing your request",
                 Status = StatusCodes.Status500InternalServerError,
                 Detail = exception.Message
-            };
-        }
-
+            },
+        };
         problemDetails.Instance = httpContext.Request.Path;
 
         httpContext.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;

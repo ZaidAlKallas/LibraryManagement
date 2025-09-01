@@ -15,11 +15,11 @@ public static class DependencyInjection
             cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
         });
 
-        // FluentValidation
-        services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
-
         // Pipeline for validation
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+        // FluentValidation
+        services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
 
         return services;
     }
