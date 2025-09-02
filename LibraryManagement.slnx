@@ -5,4 +5,8 @@
     <Project Path="src/Library.Domain/Library.Domain.csproj" />
     <Project Path="src/Library.Infrastructure/Library.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Library.API.Tests/Library.API.Tests.csproj" />
+    <Project Path="test/Library.Application.Tests/Library.Application.Tests.csproj" />
+  </Folder>
 </Solution>
